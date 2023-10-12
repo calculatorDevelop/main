@@ -11,17 +11,19 @@ def main():
 原神的伤害计算结果是由七大乘区相乘所得。\n
 其中不同来源的\t**基准x倍率**\t互为加算关系，最终被简化成\t**(基准x倍率+附加)**\t乘区。\n
 **我该如何操作？**\n
-第一步：根据自身游戏内情况，在每个选项卡中输入相应的值，其中默认值即数值的精确度，如有疑惑可以查看对应说明。\n
+第一步：根据自身游戏内情况，在每个选项卡中输入相应的值，%\t代表需要输入百分数，即100%倍率对应输入100，如有疑惑可以查看对应说明。\n
 第二步：根据需要，选择是否计算单词条提升分析。\n
 第三步：点击计算按钮查看结果。
                     ''')
 
     #分成两列，左列选择乘区，右列是便携计算器
-    col_cq,col_cal=st.columns([0.7,0.25])
+    col_cq,col_cal=st.columns([0.7,0.3])
 
     #全局变量，维护用户输入情况
     flag_input_ysjt=False  #元素精通
-    flag_input_jsdj=False  #角色等级   
+    flag_input_jsdj=False  #角色等级
+    flag_jh=False  #是否激化
+    flag_zf=False  #是否增幅 
 
     #反应等级系数
     dict_fydjxs={1:17.23,2:18.67,3:20.10,4:21.51,5:22.14,6:25.04,7:26.40,8:28.50,9:31.31,10:34.09,
@@ -50,7 +52,7 @@ def main():
 - 技能倍率默认为攻击力倍率，显示为不加说明的百分数，而除攻击力以外的生命值倍率，防御力倍率等则会有明确说明。\n
 **什么是附加倍率？我从哪里可以看到？**\n
 - 附加倍率是除角色技能之外的，其他来源的的倍率，可以来自角色天赋，角色命座，队伍中其他角色。\n
-- \t例如：** 钟离天赋可以为自己额外增加基于自身的生命值倍率。申鹤可以给予队伍中所有角色基于自身攻击力的额外倍率。\n
+- \t**例如：** 钟离天赋可以为自己额外增加基于自身的生命值倍率。申鹤可以给予队伍中所有角色基于自身攻击力的额外倍率。\n
 - 原神中附加倍率的来源有许多，留意角色自身天赋、命座，队友天赋及命座即可。\n
 **攻击力倍率里为什么会有攻击力倍率乘数？我可以从哪里看到？**\n
 - 倍率乘数是目前游戏中极其稀少的部分，其可以直接与倍率乘算提升伤害。\n
@@ -64,15 +66,15 @@ def main():
             #flag_用于标记是否参与单词条提升分析
             if st.toggle('攻击力倍率'):
                 flag_gjl=True
-                gjlblcs=1
+                gjlblcs=100
                 gjl=st.number_input('请输入攻击力',min_value=0,value=2000,step=1)
-                bl_gjl=st.number_input('请输入攻击力倍率',min_value=0.0,value=1.0,step=0.001)
+                bl_gjl=st.number_input('请输入攻击力倍率(%)',min_value=0.0,value=100.0,step=0.1)
                 #攻击力倍率乘数
                 if st.toggle('攻击力倍率乘数'):
-                    gjlblcs=st.number_input('请输入攻击力倍率乘数',min_value=0.0,value=1.0,step=0.001)
-                    gjlbl=gjl*bl_gjl*gjlblcs
+                    gjlblcs=st.number_input('请输入攻击力倍率乘数(%)',min_value=0.0,value=100.0,step=0.1)
+                    gjlbl=gjl*bl_gjl*gjlblcs/10000
                 else:    
-                    gjlbl=gjl*bl_gjl
+                    gjlbl=gjl*bl_gjl/100
                 st.markdown('\n\n')
             else:
                 flag_gjl=False
@@ -81,8 +83,8 @@ def main():
             if st.toggle('生命值倍率'):
                 flag_smz=True
                 smz=st.number_input('请输入生命值',min_value=0,value=20000,step=1)
-                bl_smz=st.number_input('请输入生命值倍率',min_value=0.0,value=1.0,step=0.001)
-                smzbl=smz*bl_smz
+                bl_smz=st.number_input('请输入生命值倍率(%)',min_value=0.0,value=100.0,step=0.1)
+                smzbl=smz*bl_smz/100
             else:
                 flag_smz=False
                 smzbl=0
@@ -90,8 +92,8 @@ def main():
             if st.toggle('防御力倍率'):
                 flag_fyl=True
                 fyl=st.number_input('请输入防御力',min_value=0,value=2000,step=1)
-                bl_fyl=st.number_input('请输入防御力倍率',min_value=0.0,value=1.0,step=0.001)  
-                fylbl=fyl*bl_fyl
+                bl_fyl=st.number_input('请输入防御力倍率',min_value=0.0,value=100.0,step=0.1)  
+                fylbl=fyl*bl_fyl/100
             else:
                 flag_fyl=False
                 fylbl=0
@@ -101,8 +103,8 @@ def main():
                 if not flag_input_ysjt:
                     ysjt=st.number_input('请输入元素精通',min_value=0,value=200,step=1)
                     flag_input_ysjt=True
-                bl_ysjt=st.number_input('请输入元素精通倍率',min_value=0.0,value=1.0,step=0.001) 
-                ysjtbl=ysjt*bl_ysjt
+                bl_ysjt=st.number_input('请输入元素精通倍率',min_value=0.0,value=100.0,step=0.1) 
+                ysjtbl=ysjt*bl_ysjt/100
             else:
                 flag_ysjt=False
                 ysjtbl=0
@@ -139,32 +141,32 @@ def main():
                 if st.toggle('附加攻击力倍率'):
                     flag_fjgjl=True
                     fjgjl=st.number_input('请输入附加攻击力',min_value=0,value=2000,step=1)
-                    bl_fjgjl=st.number_input('请输入附加攻击力倍率',min_value=0.0,value=1.0,step=0.001)
-                    fj_gjlbl=fjgjl*bl_fjgjl
+                    bl_fjgjl=st.number_input('请输入附加攻击力倍率（%）',min_value=0.0,value=100.0,step=0.1)
+                    fj_gjlbl=fjgjl*bl_fjgjl/100
                 else:
                     fj_gjlbl=0
 
                 if st.toggle('附加生命值倍率'):
                     flag_fjsmz=True
                     fjsmz=st.number_input('请输入附加生命值',min_value=0,value=20000,step=1)
-                    bl_fjsmz=st.number_input('请输入附加生命值倍率',min_value=0.0,value=1.0,step=0.001)
-                    fj_smzbl=fjsmz*bl_fjsmz
+                    bl_fjsmz=st.number_input('请输入附加生命值倍率（%）',min_value=0.0,value=100.0,step=0.1)
+                    fj_smzbl=fjsmz*bl_fjsmz/100
                 else:
                     fj_smzbl=0
 
                 if st.toggle('附加防御力倍率'):
                     flag_fjfyl=True
                     fjfyl=st.number_input('请输入附加防御力',min_value=0,value=2000,step=1)
-                    bl_fjfyl=st.number_input('请输入附加防御力倍率',min_value=0.0,value=1.0,step=0.001)  
-                    fj_fylbl=fjfyl*bl_fjfyl
+                    bl_fjfyl=st.number_input('请输入附加防御力倍率（%）',min_value=0.0,value=100.0,step=0.1)  
+                    fj_fylbl=fjfyl*bl_fjfyl/100
                 else:
                     fj_fylbl=0
 
                 if st.toggle('附加元素精通倍率'):
                     flag_fjysjt=True
                     fjysjt=st.number_input('请输入附加元素精通',min_value=0,value=200,step=1)
-                    bl_fjysjt=st.number_input('请输入附加元素精通倍率',min_value=0.0,value=1.0,step=0.001) 
-                    fj_ysjtbl=fjysjt*bl_fjysjt
+                    bl_fjysjt=st.number_input('请输入附加元素精通倍率',min_value=0.0,value=100.0,step=0.1) 
+                    fj_ysjtbl=fjysjt*bl_fjysjt/100
                 else:
                     fj_ysjtbl=0
                 #附加倍率求和
@@ -184,7 +186,8 @@ def main():
 丘丘霜铠王的护盾期间可以减少我方80%物理/元素伤害加成，为减算关系。\n
 圣遗物绝缘之旗印的套装效果只作用于元素爆发，因此也不会显示在角色详情中。
 ''')
-            zs=st.number_input('请输入增伤系数',min_value=0.0,value=1.0,step=0.001)
+            zs=st.number_input('请输入增伤系数（%）',min_value=0.0,value=100.0,step=0.1)
+            zs=zs/100
 
         #抗性（kx）乘区，gwkx怪物抗性
         def get_kx(gwkx):  #根据怪物抗性得到抗性系数
@@ -214,8 +217,8 @@ def main():
 **x = 1/(1+4k)**\n
 ''')
                     st.markdown('\n')
-            gwkx=st.number_input('请输入怪物抗性',value=0.1,step=0.001)
-            kx=get_kx(gwkx)
+            gwkx=st.number_input('请输入怪物抗性(%)',value=10.0,step=0.1)
+            kx=get_kx(gwkx/100)
 
         #防御（fy）乘区,jsdj角色等级，gwdj怪物等级，jf减防，wsfy无视防御    
         def get_fy(jsdj,gwdj,jf=0.0,wsfy=0.0):#计算防御系数
@@ -251,10 +254,10 @@ def main():
 
         #暴击乘区，bjl暴击率，bjsh暴击伤害，qw期望
         with tab5:  
-            bjl=st.number_input('请输入暴击率',min_value=0.0,max_value=1.0,value=0.05,step=0.001)
-            bjsh=st.number_input('请输入暴击伤害',min_value=0.0,value=0.5,step=0.001)
+            bjl=st.number_input('请输入暴击率(%)',min_value=0.0,max_value=100.0,value=5.0,step=0.1)
+            bjsh=st.number_input('请输入暴击伤害(%)',min_value=0.0,value=50.0,step=0.1)
             #暴击期望乘数计算
-            qw=1+bjl*bjsh
+            qw=1+bjl*bjsh/10000
 
         #增幅（zf）乘区，jczf基础增幅
         def get_zf(jczf,ysjt_r):  #计算增幅系数
@@ -270,6 +273,7 @@ def main():
                     st.markdown(''' **元素精通值为m**\n 
 **增幅系数=基础增幅系数+2.78*m/(m+1400)**                                
 ''')
+            flag_zf=False
             jczf=st.slider('请选择基础增幅系数',1.0,2.0,1.0,0.5,disabled=(type_r=='都不可以' or type_r=='可以激化'))
             if jczf>1:
                 flag_zf=True
@@ -314,16 +318,16 @@ def main():
         #倍率区
         temp=jzbl+fjbl #记录原先的倍率区
         if flag_gjl:
-            jc_gjl=st.number_input('请输入基础攻击力',min_value=1,value=300,step=1)
-            ts_gjl=jc_gjl*5*bl_gjl*gjlblcs/temp
+            jc_gjl=st.number_input('请输入基础攻击力',min_value=1,value=1000,step=1)
+            ts_gjl=jc_gjl*0.0005*bl_gjl*gjlblcs/temp
         if flag_smz:
             jc_smz=st.number_input('请输入基础生命值',min_value=1,value=10000,step=1)
-            ts_smz=jc_smz*5*bl_smz/temp
+            ts_smz=jc_smz*0.05*bl_smz/temp
         if flag_fyl:
-            jc_fyl=st.number_input('请输入基础防御力',min_value=1,value=300,step=1)
-            ts_fyl=jc_fyl*6.2*bl_fyl/temp
+            jc_fyl=st.number_input('请输入基础防御力',min_value=1,value=1000,step=1)
+            ts_fyl=jc_fyl*0.062*bl_fyl/temp
         if flag_ysjt:
-            ts_ysjt=2000*bl_ysjt/temp
+            ts_ysjt=20*bl_ysjt/temp
         if flag_jh:  #激化倍率提升分析
             ts_jh_ysjt=get_jh_ysjt(ysjt+20)*100/get_jh_ysjt(ysjt)-100  #元素精通
             if jsdj>80 and jsdj<90:  #角色等级
@@ -331,27 +335,27 @@ def main():
             if jsdj<=80:
                 ts_jh_jsdj=dict_fydjxs[jsdj+10]*100/dict_fydjxs[jsdj]-100
         if flag_fjgjl:
-            jc_fjgjl=st.number_input('请输入附加的基础攻击力',min_value=1,value=300,step=1)
-            ts_fjgjl=jc_fjgjl*5*bl_fjgjl/temp
+            jc_fjgjl=st.number_input('请输入附加的基础攻击力',min_value=1,value=1000,step=1)
+            ts_fjgjl=jc_fjgjl*0.05*bl_fjgjl/temp
         if flag_fjsmz:
             jc_fjsmz=st.number_input('请输入附加的基础生命值',min_value=1,value=10000,step=1)
-            ts_fjsmz=jc_fjsmz*5*bl_fjsmz/temp
+            ts_fjsmz=jc_fjsmz*0.05*bl_fjsmz/temp
         if flag_fjfyl:
-            jc_fjfyl=st.number_input('请输入附加的基础防御力',min_value=1,value=300,step=1)
-            ts_fjfyl=jc_fjfyl*5*bl_fjfyl/temp
+            jc_fjfyl=st.number_input('请输入附加的基础防御力',min_value=1,value=1000,step=1)
+            ts_fjfyl=jc_fjfyl*0.05*bl_fjfyl/temp
         if flag_fjysjt:
-            ts_fjysjt=2000*bl_fjysjt/temp
+            ts_fjysjt=20*bl_fjysjt/temp
         with st.expander('什么是基础XX？'):
             st.markdown('显示在来源角色的角色详情中，以白色数字显示  **例如：** 基础攻击力是显示在攻击力后的白色数字，而非绿色数字。')
         #倍率区结束
 
         ts_zs=5/zs  #增伤
-        if bjl+0.033>100:  #暴击率
-            ts_bjl=(1-bjl)*bjsh*100/qw
+        if bjl+3.3>100:  #暴击率
+            ts_bjl=(100-bjl)*bjsh*100/qw
         else:
-            ts_bjl=3.3*bjsh/qw
-        ts_bjsh=bjl*6.6/qw  #暴击伤害
-        ts_jk=(get_kx(gwkx-0.05)-kx)*100/kx  #减抗
+            ts_bjl=0.033*bjsh/qw
+        ts_bjsh=bjl*0.066/qw  #暴击伤害
+        ts_jk=(get_kx(gwkx/100-0.05)-kx)*100/kx  #减抗
         if jsdj>80 and jsdj<90:  #角色等级
             ts_jsdj=(get_fy(90,gwdj,jf,wsfy)-fy)*100/fy
         if jsdj<=80:
@@ -376,7 +380,7 @@ def main():
 ''')
         with col_res:
             result=(jzbl+fjbl)*zs*kx*fy
-            result_b=result*(1+bjsh)
+            result_b=result*(1+bjsh/100)
             result_qw=result*qw
             st.write('无反应未暴击伤害是：',round(result))
             st.write('无反应暴击伤害是：',round(result_b))
@@ -386,19 +390,19 @@ def main():
         with col_res_r:
             if flag_zf:
                 result_r=result*zf
-                result_r_b=result_r*(1+bjsh)
+                result_r_b=result_r*(1+bjsh/100)
                 result_r_qw=result_r*qw
                 st.write('反应未暴击伤害是：',round(result_r))
                 st.write('反应暴击伤害是：',round(result_r_b))
                 st.write('反应期望伤害是：',round(result_r_qw))
             if flag_jh:
                 result_jh=(jzbl+jhbl+fjbl)*zs*kx*fy
-                result_jh_b=result_jh*(1+bjsh)
+                result_jh_b=result_jh*(1+bjsh/100)
                 result_jh_qw=result_jh*qw
                 st.write('激化未暴击伤害是：',round(result_jh))
                 st.write('激化暴击伤害是：',round(result_jh_b))
                 st.write('激化期望伤害是：',round(result_jh_qw))
-                st.write('**激化伤害占比是：**',round(jhbl/(jzbl+jhbl+fjbl),2))
+                st.write('**激化伤害占比是：**',round(jhbl*100/(jzbl+jhbl+fjbl),1),'%')
         
         #单词条提升展示
         if flag_ts:
