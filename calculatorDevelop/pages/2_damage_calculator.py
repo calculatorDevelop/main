@@ -19,6 +19,23 @@ def main():
     #分成两列，左列选择乘区，右列是便携计算器
     col_cq,col_cal=st.columns([0.7,0.25])
 
+    #全局变量，维护用户输入情况
+    flag_input_ysjt=False  #元素精通
+    flag_input_jsdj=False  #角色等级   
+
+    #反应等级系数
+    dict_fydjxs={1:17.23,2:18.67,3:20.10,4:21.51,5:22.14,6:25.04,7:26.40,8:28.50,9:31.31,10:34.09,
+                 11:37.58,12:40.30,13:44.45,14:48.56,15:53.34,16:59.50,17:64.18,18:69.52,19:74.80,20:80.74,
+                 21:85.92,22:91.74,23:96.82,24:103.23,25:108.21,26:113.14,27:118.03,28:122.88,29:130.38,30:136.47,
+                 31:143.18,32:149.16,33:155.76,34:161.65,35:169.45,36:176.54,37:184.22,38:191.84,39:199.41,40:207.55,
+                 41:215.64,42:224.30,43:233.52,44:243.31,45:256.17,46:268.31,47:281.61,48:294.81,49:309.16,50:323.40,
+                 51:336.93,52:350.37,53:364.33,54:378.20,55:398.63,56:416.51,57:434.27,58:452.52,59:472.44,60:492.83,
+                 61:513.68,62:539.13,63:565.60,64:592.48,65:624.47,66:651.60,67:679.72,68:707.69,69:737.22,70:765.42,
+                 71:794.61,72:824.79,73:851.37,74:877.80,75:914.29,76:946.63,77:979.35,78:1010.78,79:1044.84,80:1077.04,
+                 81:1109.64,82:1143.17,83:1176.54,84:1209.74,85:1253.80,86:1288.84,87:1325.35,88:1363.33,89:1405.48,90:1446.88}
+
+    #用户选择可反应类型
+    type_r=st.radio(' :red[**选择可反应类型**] ',['都不可以','可以激化','可以增幅'])
     #左列开始
     with col_cq:
         #分成6页，每页放置一个乘区
@@ -33,13 +50,17 @@ def main():
 - 技能倍率默认为攻击力倍率，显示为不加说明的百分数，而除攻击力以外的生命值倍率，防御力倍率等则会有明确说明。\n
 **什么是附加倍率？我从哪里可以看到？**\n
 - 附加倍率是除角色技能之外的，其他来源的的倍率，可以来自角色天赋，角色命座，队伍中其他角色。\n
-**·\t例如：** 钟离天赋可以为自己额外增加基于自身的生命值倍率。申鹤可以给予队伍中所有角色基于自身攻击力的额外倍率。\n
+- \t例如：** 钟离天赋可以为自己额外增加基于自身的生命值倍率。申鹤可以给予队伍中所有角色基于自身攻击力的额外倍率。\n
 - 原神中附加倍率的来源有许多，留意角色自身天赋、命座，队友天赋及命座即可。\n
 **攻击力倍率里为什么会有攻击力倍率乘数？我可以从哪里看到？**\n
 - 倍率乘数是目前游戏中极其稀少的部分，其可以直接与倍率乘算提升伤害。\n
 - 倍率乘数来源极少， **例如：** 宵宫e技能天赋，提升普通攻击的倍率。行秋第4命座提升e技能倍率等。\n
-- :red[在多数情况下你可以完全忽略它。]
-                            ''')
+- :red[在多数情况下你可以完全忽略它。]\n
+**什么是激化倍率？我可以从哪里看到？**\n
+- 激化倍率是独属于 :green[草] :violet[雷] 元素反应的额外伤害加成，属于倍率区。\n
+- 激化倍率的数值与角色的技能模组无关，只与角色等级和角色元素精通有关。\n
+- :red[你可以简单理解为属于草雷元素的增幅反应]
+''')
             #flag_用于标记是否参与单词条提升分析
             if st.toggle('攻击力倍率'):
                 flag_gjl=True
@@ -77,14 +98,37 @@ def main():
 
             if st.toggle('元素精通倍率'):
                 flag_ysjt=True
-                ysjt=st.number_input('请输入元素精通',min_value=0,value=200,step=1)
-                bl_ysjt=st.number_input('请输入参与倍率计算的元素精通',min_value=0.0,value=1.0,step=0.001) 
+                if not flag_input_ysjt:
+                    ysjt=st.number_input('请输入元素精通',min_value=0,value=200,step=1)
+                    flag_input_ysjt=True
+                bl_ysjt=st.number_input('请输入元素精通倍率',min_value=0.0,value=1.0,step=0.001) 
                 ysjtbl=ysjt*bl_ysjt
             else:
                 flag_ysjt=False
                 ysjtbl=0
+     
             #基准倍率求和
             jzbl=gjlbl+smzbl+fylbl+ysjtbl
+
+            #激化倍率，jh激化
+            def get_jh_ysjt(ysjt):  #计算激化反应中元素精通贡献的系数
+                return 1+5*ysjt/(ysjt+1400)
+            if st.toggle('激化倍率',disabled=(type_r=='都不可以' or type_r=='可以增幅')):
+                flag_jh=True
+                if not flag_input_ysjt:
+                    ysjt=st.number_input('请输入元素精通',min_value=0,value=200,step=1)
+                    flag_input_ysjt=True
+                if not flag_input_jsdj:
+                    jsdj=st.slider('请选择角色等级',1,90,90)
+                    flag_input_jsdj=True
+                type_jh=st.radio("选择激化类型",["蔓激化","超激化"])
+                if type_jh=='蔓激化':
+                    jhbl=dict_fydjxs[jsdj]*1.25*get_jh_ysjt(ysjt)
+                if type_jh=='超激化':
+                    jhbl=dict_fydjxs[jsdj]*1.5*get_jh_ysjt(ysjt)
+            else:
+                flag_jh=False
+                jhbl=0
 
             #附加倍率，fj附加
             flag_fjgjl=False
@@ -157,7 +201,7 @@ def main():
 - 不同的怪物具有不同的抗性，:red[一般情况下抗性为10%]，而专精某一元素的怪物可以有70%的对应元素抗性。\n
 人形怪物的物理抗性普遍较低，而发条机械类的怪物物理抗性普遍较高。\n
 同时怪物的状态也影响着自身抗性，一般情况下，具有护盾则具有高额抗性，而被击倒或虚弱状态抗性较低。\n
-- 具体怪物抗性图可以在原神wiki上找到。\n
+- 查看 [怪物抗性图](https://wiki.biligame.com/ys/%E6%80%AA%E7%89%A9%E6%8A%97%E6%80%A7%E4%B8%80%E8%A7%88)\n
 - 值得注意的是，角色拥有多种减抗手段， **例如：** 圣遗物翠绿之影的套装效果，角色技能、天赋、命座等。                           
 ''')      
                 if st.toggle('对抗性计算感到好奇？'):
@@ -197,7 +241,9 @@ def main():
                 if st.toggle('对计算感到好奇？'):
                     st.markdown(' **防御系数=(角色等级+100)/(角色等级+100+(怪物等级+100)(1-减防)(1-无视防御))** ')
                     st.markdown('\n')
-            jsdj=st.slider('请选择角色等级',1,90,90)
+            if not flag_input_jsdj:
+                jsdj=st.slider('请选择角色等级',1,90,90)
+                flag_input_jsdj=True
             gwdj=st.slider('请选择怪物等级',1,100,100)
             jf=st.number_input('请输入减防量',min_value=0.0,value=0.0,step=0.01)
             wsfy=st.number_input('请输入无视防御量',min_value=0.0,value=0.0,step=0.01)
@@ -224,11 +270,15 @@ def main():
                     st.markdown(''' **元素精通值为m**\n 
 **增幅系数=基础增幅系数+2.78*m/(m+1400)**                                
 ''')
-                st.markdown(' - :red[在目前环境中，可以认为参与倍率计算的元素精通和参与反应的元素精通一致]')
-            jczf=st.slider('请选择基础增幅系数',1.0,2.0,1.0,0.5)
+            jczf=st.slider('请选择基础增幅系数',1.0,2.0,1.0,0.5,disabled=(type_r=='都不可以' or type_r=='可以激化'))
             if jczf>1:
-                ysjt_r=st.number_input('请输入用于反应的元素精通',min_value=0,value=200,step=1)
-                zf=get_zf(jczf,ysjt_r)
+                flag_zf=True
+                if not flag_input_ysjt:
+                        ysjt=st.number_input('请输入元素精通',min_value=0,value=200,step=1)
+                        flag_input_ysjt=True
+                zf=get_zf(jczf,ysjt)
+            else:
+                zf=1
     #左列结束
 
     #右列开始
@@ -273,7 +323,13 @@ def main():
             jc_fyl=st.number_input('请输入基础防御力',min_value=1,value=300,step=1)
             ts_fyl=jc_fyl*6.2*bl_fyl/temp
         if flag_ysjt:
-            ts_ysjt=2000/ysjt
+            ts_ysjt=2000*bl_ysjt/temp
+        if flag_jh:  #激化倍率提升分析
+            ts_jh_ysjt=get_jh_ysjt(ysjt+20)*100/get_jh_ysjt(ysjt)-100  #元素精通
+            if jsdj>80 and jsdj<90:  #角色等级
+                ts_jh_jsdj=144688/dict_fydjxs[jsdj]-100
+            if jsdj<=80:
+                ts_jh_jsdj=dict_fydjxs[jsdj+10]*100/dict_fydjxs[jsdj]-100
         if flag_fjgjl:
             jc_fjgjl=st.number_input('请输入附加的基础攻击力',min_value=1,value=300,step=1)
             ts_fjgjl=jc_fjgjl*5*bl_fjgjl/temp
@@ -284,7 +340,7 @@ def main():
             jc_fjfyl=st.number_input('请输入附加的基础防御力',min_value=1,value=300,step=1)
             ts_fjfyl=jc_fjfyl*5*bl_fjfyl/temp
         if flag_fjysjt:
-            ts_fjysjt=2000/fjysjt
+            ts_fjysjt=2000*bl_fjysjt/temp
         with st.expander('什么是基础XX？'):
             st.markdown('显示在来源角色的角色详情中，以白色数字显示  **例如：** 基础攻击力是显示在攻击力后的白色数字，而非绿色数字。')
         #倍率区结束
@@ -302,10 +358,10 @@ def main():
             ts_jsdj=(get_fy(jsdj+10,gwdj,jf,wsfy)-fy)*100/fy
         ts_jf=(get_fy(jsdj,gwdj,jf+0.05,wsfy)-fy)*100/fy  #减防
         ts_wsfy=(get_fy(jsdj,gwdj,jf,wsfy+0.05)-fy)*100/fy  #无视防御
-        if jczf>1:  #增幅
-            ts_zf=(get_zf(jczf,ysjt_r+20)-zf)*100/zf
+        if flag_zf:  #增幅
+            ts_zf=(get_zf(jczf,ysjt+20)-zf)*100/zf
 
-    #结果展示,result伤害结果，_b暴击伤害，_qw暴击期望伤害，_r反应伤害
+    #结果展示,result伤害结果，_b暴击伤害，_qw暴击期望伤害，_r反应伤害，_jh激化伤害
     #分2列展示伤害，无反应在左，反应在右
     col_res,col_res_r=st.columns(2)
     #分3列展示单词条提升分析
@@ -315,7 +371,8 @@ def main():
             st.markdown('''**可能是以下原因：**\n
 **1.** 受浮点数精度影响，伤害值在±3以内浮动都在合理范围内。\n
 **2.** 怪物抗性有误，具体可查怪物抗性表。\n
-**3.** 未计算非面板增伤，非全伤害增加。留意不显示在角色详情的增伤和只作用于某个范围伤害增加效果。 
+**3.** 未计算非面板增伤，非全伤害增加。留意不显示在角色详情的增伤和只作用于某个范围伤害增加效果。\n
+**4.** 计算单词条提升时，:red[忽略激化倍率]。元素精通对于激化反应的提升单独计算。 
 ''')
         with col_res:
             result=(jzbl+fjbl)*zs*kx*fy
@@ -323,20 +380,30 @@ def main():
             result_qw=result*qw
             st.write('无反应未暴击伤害是：',round(result))
             st.write('无反应暴击伤害是：',round(result_b))
-            st.write('无反应期望伤害是：',round(result_qw))
-        #反应伤害展示
+            st.write('无反应期望伤害是：',round(result_qw)) 
+
+        #反应/激化伤害展示
         with col_res_r:
-            if jczf>1:
+            if flag_zf:
                 result_r=result*zf
                 result_r_b=result_r*(1+bjsh)
                 result_r_qw=result_r*qw
                 st.write('反应未暴击伤害是：',round(result_r))
                 st.write('反应暴击伤害是：',round(result_r_b))
                 st.write('反应期望伤害是：',round(result_r_qw))
+            if flag_jh:
+                result_jh=(jzbl+jhbl+fjbl)*zs*kx*fy
+                result_jh_b=result_jh*(1+bjsh)
+                result_jh_qw=result_jh*qw
+                st.write('激化未暴击伤害是：',round(result_jh))
+                st.write('激化暴击伤害是：',round(result_jh_b))
+                st.write('激化期望伤害是：',round(result_jh_qw))
+                st.write('**激化伤害占比是：**',round(jhbl/(jzbl+jhbl+fjbl),2))
         
         #单词条提升展示
         if flag_ts:
             with col_ts_1: 
+                st.divider()
                 if flag_gjl:
                     st.write('5%攻击力(',round(jc_gjl*0.05),')可以提升伤害：',round(ts_gjl,2),'%')
                 if flag_smz:
@@ -345,6 +412,12 @@ def main():
                     st.write('6.2%防御力(',round(jc_fyl*0.062),')可以提升伤害：',round(ts_fyl,2),'%')
                 if flag_ysjt:
                     st.write('20元素精通可以提升伤害：',round(ts_ysjt,2),'%')
+                if flag_jh:
+                    st.write('20元素精通可以提升激化伤害：',round(ts_jh_ysjt,2),'%')
+                    if jsdj>80 and jsdj<90:
+                        st.write('将角色升至满级可以提升激化伤害：',round(ts_jh_jsdj,2),'%')
+                    if jsdj<=80:
+                        st.write('提升10级角色等级可以提升激化伤害：',round(ts_jh_jsdj,2),'%')
                 if flag_fjgjl:
                     st.write('5%附加攻击力(',round(jc_fjgjl*0.05),')可以提升伤害：',round(ts_fjgjl,2),'%')
                 if flag_fjsmz:
@@ -354,6 +427,7 @@ def main():
                 if flag_fjysjt:
                     st.write('20附加元素精通可以提升伤害：',round(ts_fjysjt,2),'%')
             with col_ts_2:
+                st.divider()
                 st.write('5%增伤可以提升伤害：',round(ts_zs,2),'%')
                 st.write('3.3%暴击率可以提升伤害：',round(ts_bjl,2),'%')
                 if bjl+0.033>100:
@@ -361,14 +435,15 @@ def main():
                 st.write('6.6%暴击伤害可以提升伤害：',round(ts_bjsh,2),'%')
                 st.write('5%减抗可以提升伤害：',round(ts_jk,2),'%')
             with col_ts_3:
+                st.divider()
                 if jsdj>80 and jsdj<90:
                     st.write('将角色升至满级可以提升伤害：',round(ts_jsdj,2),'%')
                 if jsdj<=80:
                     st.write('提升10级角色等级可以提升伤害：',round(ts_jsdj,2),'%')
                 st.write('5%减防可以提升伤害：',round(ts_jf,2),'%')
                 st.write('5%无视防御可以提升伤害：',round(ts_wsfy,2),'%')
-                if jczf>1:
-                    st.write('20元素精通用于反应可以提升伤害：',round(ts_zf,2),'%')
+                if flag_zf:
+                    st.write('20元素精通可以提升增幅反应伤害：',round(ts_zf,2),'%')
         
 if __name__ == '__main__':  
     main()
