@@ -261,7 +261,7 @@ def main():
 
         #增幅（zf）乘区，jczf基础增幅
         def get_zf(jczf,ysjt_r):  #计算增幅系数
-            return jczf+2.78*ysjt_r/(ysjt_r+1400)
+            return jczf*(1+2.78*ysjt_r/(ysjt_r+1400))
         with tab6:
             with st.expander('对增幅区有疑惑？'):
                 st.markdown(''' **什么是基础增幅系数？我在哪里可以看到元素精通影响后增幅系数？** \n
@@ -271,7 +271,7 @@ def main():
 ''')
                 if st.toggle('对增幅系数的计算感到好奇？'):
                     st.markdown(''' **元素精通值为m**\n 
-**增幅系数=基础增幅系数+2.78*m/(m+1400)**                                
+**增幅系数=基础增幅系数\*(1+2.78*m/(m+1400))**                                
 ''')
             flag_zf=False
             jczf=st.slider('请选择基础增幅系数',1.0,2.0,1.0,0.5,disabled=(type_r=='都不可以' or type_r=='可以激化'))
